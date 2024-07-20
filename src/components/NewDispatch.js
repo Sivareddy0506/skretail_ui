@@ -142,16 +142,16 @@ const ProductForm = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'SKU code not found');
+        throw new Error(data.error || 'SKU code does not match');
       }
 
       setSkuSuccessMessage('SKU code verified successfully');
       setID(data.id);
       setIsFormValid(true);
     } catch (error) {
-      setSkuError('SKU code does not exist');
+      setSkuError('SKU code does not match');
       setIsFormValid(false);
-      openModal('SKU code does not exist', 'skuCode');
+      openModal('SKU code does not match', 'skuCode');
     }
   };
 
@@ -220,7 +220,7 @@ const ProductForm = () => {
     <div className='rounded'>
       <div className='row'>
         <div className='col-6 p-4 bg-white'>
-          <form>
+          <form autocomplete="off">
             <label className='pb-2'>Scan ASN/FSN</label>
             <div className='position-relative'>
               <input

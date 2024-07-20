@@ -19,7 +19,7 @@ const Sidebar = () => {
             <ul className="menu ">
                 <li><Link to="/"><div className='d-flex justify-content-start align-items-center'><i className='dashboard-icon'></i> Dashboard </div></Link></li>
                 <li><Link to="/products"><div className='d-flex justify-content-start align-items-center'><i className='products-icon'></i> Products</div></Link></li>
-                <li><Link to="/dispatches"><div className='d-flex justify-content-start align-items-center'><i className='dispatches-icon'></i>  Quality Contorl</div></Link></li>
+                <li><Link to="/dispatches"><div className='d-flex justify-content-start align-items-center'><i className='dispatches-icon'></i>  Quality Control</div></Link></li>
             </ul>
             <div className="logout "
                 onClick={handleLogout}><div className='d-flex justify-content-start align-items-center'> <i className='logout-icon'></i> Logout</div>
