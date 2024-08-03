@@ -10,30 +10,69 @@ const Login = ({ onLogin }) => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (localStorage.getItem('token')) {
-      navigate('/');
-    }
-  }, [navigate]);
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    try {
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken');
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    if (accessToken && user) {
+        console.log('Access Token:', accessToken);
+        console.log('User:', user);
+
+        // Optional: Validate token
+        axios.get(`${API_BASE_URL}/auth/validate`, { headers: { Authorization: `Bearer ${accessToken}` } })
+            .then(response => {
+                // Token is valid
+                console.log('Token is valid');
+            })
+            .catch(error => {
+                // Token is invalid
+                console.error('Token validation failed:', error);
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('user');
+                navigate('/login');
+            });
+    } else {
+        navigate('/login'); // Redirect to login if no token or user found
+    }
+}, [navigate, API_BASE_URL]);
+
+
+const handleSubmit = async (event) => {
+  event.preventDefault();
+
+  try {
       const response = await axios.post(`${API_BASE_URL}/auth/login`, { email, password });
-      console.log('Login successful:', response.data);
-      // Save token and user details to localStorage
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      onLogin(response.data.user); // Pass user data back to the parent component
+      const responseData = response.data; // Extract response data
+
+      console.log('Login response:', responseData);
+
+      // Check for required fields in responseData
+      const requiredFields = ['accessToken', 'refreshToken']; // Adjust based on actual response
+      for (const field of requiredFields) {
+          if (!responseData[field]) {
+              console.error(`Login response missing required field: ${field}`);
+              return; // Exit if any required field is missing
+          }
+      }
+
+      // Since user details are not included, adjust logic accordingly
+      localStorage.setItem('accessToken', responseData.accessToken);
+      localStorage.setItem('refreshToken', responseData.refreshToken);
+
+      // Handle login and redirection
+      onLogin(); // If no user details are available, adjust this logic as needed
       navigate('/'); // Redirect to homepage
-    } catch (err) {
+  } catch (err) {
       console.error('Error logging in:', err);
       const errorMessage = err.response && err.response.data && err.response.data.message
-        ? err.response.data.message
-        : 'An unexpected error occurred';
+          ? err.response.data.message
+          : 'An unexpected error occurred';
       setError(errorMessage);
-    }
-  };
+  }
+};
+
 
   return (
     <div>

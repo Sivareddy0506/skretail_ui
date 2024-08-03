@@ -5,6 +5,7 @@ import Modal from 'react-modal';
 import Tick from './../assets/images/tick.png';
 import Cross from './../assets/images/cross.png';
 import errorSound from './../assets/audio/windows-error.mp3';
+import axios from 'axios';
 
 
 Modal.setAppElement('#root');
@@ -142,66 +143,111 @@ const ProductForm = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'SKU code does not match');
+        throw new Error(data.error || 'SKU code not found');
       }
 
       setSkuSuccessMessage('SKU code verified successfully');
       setID(data.id);
       setIsFormValid(true);
     } catch (error) {
-      setSkuError('SKU code does not match');
+      setSkuError('SKU code does not exist');
       setIsFormValid(false);
-      openModal('SKU code does not match', 'skuCode');
+      openModal('SKU code does not exist', 'skuCode');
     }
   };
 
-  const handleSave = async () => {
-    const token = localStorage.getItem('token');
-    console.log(token);
-    if (!token) {
+  // Function to refresh the token
+const refreshToken = async () => {
+  const refreshToken = localStorage.getItem('refreshToken');
+  console.log('Retrieved refreshToken:', refreshToken);
+
+  if (!refreshToken) {
+      console.error('No refresh token available');
+      throw new Error('No refresh token available');
+  }
+
+  try {
+      const response = await axios.post(`${API_BASE_URL}/auth/token`, { token: refreshToken });
+      const { accessToken } = response.data;
+      localStorage.setItem('accessToken', accessToken);
+      console.log('New accessToken set:', accessToken);
+      return accessToken;
+  } catch (error) {
+      console.error('Error refreshing token:', error);
+      throw error;
+  }
+};
+
+// Function to handle save operation
+const handleSave = async () => {
+  let token = localStorage.getItem('accessToken');
+  if (!token) {
       openModal('User not authenticated');
       return;
-    }
-  
-    try {
+  }
+
+  try {
       setIsFormValid(false);
-  
-      const response = await fetch(`${API_BASE_URL}/dispatch/savedispatch`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, // Include the token in the headers
-        },
-        body: JSON.stringify({
-          corporateCode,
-          mrp: String(mrp),
-          skuCode,
-          createdDate: new Date().toISOString(),
-        }),
+
+      // Function to fetch with token and refresh if needed
+      const fetchWithToken = async (url, options = {}) => {
+          let token = localStorage.getItem('accessToken');
+          options.headers = {
+              ...options.headers,
+              'Authorization': `Bearer ${token}`,
+          };
+
+          let response = await fetch(url, options);
+
+          if (response.status === 403) {
+              console.log('Access token expired, refreshing token...');
+              token = await refreshToken();
+              options.headers['Authorization'] = `Bearer ${token}`;
+              response = await fetch(url, options);
+          }
+
+          return response;
+      };
+
+      const response = await fetchWithToken(`${API_BASE_URL}/dispatch/savedispatch`, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`, // Include the token in the headers
+          },
+          body: JSON.stringify({
+              corporateCode,
+              mrp: String(mrp),
+              skuCode,
+              createdDate: new Date().toISOString(),
+          }),
       });
-  
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save dispatch');
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to save dispatch');
       }
 
       toast.success('Dispatch saved successfully');
       setTimeout(() => {
-        setCorporateCode('');
-        setMRP('');
-        setSKUCode('');
-        setSkuSuccessMessage('');
-        setMrpSuccessMessage('');
-        setSuccessMessage('');
-        setImageUrl('');
-        corporateCodeRef.current.focus();
+          setCorporateCode('');
+          setMRP('');
+          setSKUCode('');
+          setSkuSuccessMessage('');
+          setMrpSuccessMessage('');
+          setSuccessMessage('');
+          setImageUrl('');
+          corporateCodeRef.current.focus();
       }, 2000);
-    } catch (error) {
+  } catch (error) {
+      console.error('Error details:', error);
       toast.error(error.message || 'Error saving dispatch');
-    } finally {
+  } finally {
       setIsFormValid(true);
-    }
-  };
+  }
+};
+
+  
 
   const handleKeyPress = (event) => {
     if (event.key === 'Enter') {
@@ -220,7 +266,7 @@ const ProductForm = () => {
     <div className='rounded'>
       <div className='row'>
         <div className='col-6 p-4 bg-white'>
-          <form autocomplete="off">
+          <form autoComplete='off'>
             <label className='pb-2'>Scan ASN/FSN</label>
             <div className='position-relative'>
               <input

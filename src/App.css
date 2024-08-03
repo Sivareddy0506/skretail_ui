@@ -179,7 +179,10 @@ body{
 .w-150px{
   width: 150px !important; 
 }
-// Sidebar Css
+.w-120px {
+  min-width: 170px !important;
+  line-height: 50px;
+}
 
 .sidebar {
   width: 250px;
@@ -206,7 +209,7 @@ body{
   list-style: none;
   padding: 0;
   margin: 0;
-  flex-grow: 1;
+  /* flex-grow: 1; */
 }
 
 .menu li {
@@ -295,6 +298,32 @@ body{
 }
 .menu li:hover .products-icon{
   background-image: url(assets/images/products_color.png);
+}
+
+.mrp-icon{
+  background-image: url(assets/images/price-tag-black.png);
+  background-size: 30px;
+  display: block;
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+  margin-left: 25px;
+}
+.menu li:hover .mrp-icon{
+  background-image: url(assets/images/price-tag-red.png);
+}
+
+.barcode-icon{
+  background-image: url(assets/images/qr-code-black.png);
+  background-size: 30px;
+  display: block;
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+  margin-left: 25px;
+}
+.menu li:hover .barcode-icon{
+  background-image: url(assets/images/qr-code-red.png);
 }
 
 
@@ -498,4 +527,9 @@ background-size: 160px;
 
 .rounded-10{
 border-radius: 10px;
+}
+
+.printing-table>:not(caption)>*>*{
+  padding: .15rem .3rem;
+  line-height: 17px;
 }
